@@ -1,0 +1,89 @@
+========================================
+FORENSTIQ EVIDENCE ANALYZER
+Installation Instructions
+========================================
+
+FOR MAC USERS:
+--------------
+
+1. Unzip the file "Forenstiq-macOS.zip"
+
+2. You will see: "Forenstiq Evidence Analyzer.app"
+
+3. Double-click "Forenstiq Evidence Analyzer.app" to run
+
+4. If you see "App can't be opened" error:
+   - Right-click the app
+   - Select "Open"
+   - Click "Open" again in the dialog
+
+   OR use Terminal:
+   xattr -cr "/path/to/Forenstiq Evidence Analyzer.app"
+
+5. First launch may take 10-20 seconds
+
+SYSTEM REQUIREMENTS:
+- macOS 10.13 or later
+- 4 GB RAM minimum (8 GB recommended)
+- 2 GB free disk space
+
+
+FOR WINDOWS USERS:
+------------------
+
+(Windows version needs to be built separately on a Windows PC)
+
+If you receive a Windows version:
+
+1. Unzip the "Forenstiq-Windows.zip" file
+
+2. Open the "Forenstiq" folder
+
+3. Double-click "Forenstiq.exe" to run
+
+4. If Windows Defender shows a warning:
+   - Click "More info"
+   - Click "Run anyway"
+
+5. First launch may take 10-20 seconds
+
+SYSTEM REQUIREMENTS:
+- Windows 10 or Windows 11
+- 4 GB RAM minimum (8 GB recommended)
+- 2 GB free disk space
+
+
+WHAT THIS APP DOES:
+-------------------
+
+Forenstiq Evidence Analyzer is a forensic analysis platform that:
+
+✓ Analyzes images and videos
+✓ Extracts EXIF metadata
+✓ Performs AI-powered object detection
+✓ Detects faces in images
+✓ Extracts text using OCR
+✓ Generates forensic reports
+✓ Tracks evidence with hash values
+✓ Supports multiple device types
+
+
+FIRST TIME USE:
+---------------
+
+1. The splash screen with Forenstiq logo will appear
+2. Select a device type (Mobile, Laptop, CCTV, etc.)
+3. For laptop/CCTV analysis:
+   - Create a new case
+   - Import your evidence files
+   - Run AI analysis
+   - Generate reports
+
+
+NEED HELP?
+----------
+
+Contact: Forenstiq AI Technologies
+© 2024 Forenstiq AI Technologies
+
+========================================

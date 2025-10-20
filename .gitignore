@@ -1,0 +1,64 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+env/
+ENV/
+.venv
+
+# PyQt
+*.pyc
+*.pyo
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+
+# Build artifacts
+build/
+dist/
+*.egg-info/
+*.spec
+
+# Logs
+*.log
+logs/
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Evidence files (never commit case data!)
+sample_data/*/images/
+sample_data/*/videos/
+evidence_storage/
+
+# AI Models (large files)
+src/ai/models/*.pth
+src/ai/models/*.pt
+src/ai/models/*.onnx
+src/ai/models/*.h5
+
+# Reports
+reports/*.pdf
+
+# Config with sensitive data
+config/secrets.ini
+.env
+
+# Distribution packages (large files)
+*.zip
+Distribution_Package/
+Forenstiq-macOS.zip
