@@ -2,83 +2,28 @@
 AI Analysis Orchestrator - Coordinates all AI processing
 """
 from pathlib import Path
-from typing import Dict, List, Callable
+from typing import Dict, Callable
 import json
-from ..ai.image_classifier import ImageClassifier
-from ..ai.face_detector import FaceDetector
-from ..ai.ocr_engine import OCREngine
-from ..ai.object_detector import ObjectDetector
-from ..ai.text_analyzer import TextAnalyzer
+from .ai_service import AIService
 from ..database.file_repository import FileRepository
 from ..utils.logger import get_logger
-from ..utils.config_loader import get_config
 
 class AIAnalyzer:
-    """Orchestrate AI analysis of evidence files"""
+    """Orchestrate AI analysis of evidence files using pre-loaded models from AIService."""
     
-    def __init__(self):
+    def __init__(self, ai_service: AIService):
         self.logger = get_logger()
         self.file_repo = FileRepository()
-        self.config = get_config()
-        
-        # Check what AI modules are enabled
-        self.face_detection_enabled = self.config.get_bool('AI', 'face_detection_enabled', True)
-        self.ocr_enabled = self.config.get_bool('AI', 'ocr_enabled', True)
-        self.object_detection_enabled = self.config.get_bool('AI', 'object_detection_enabled', True)
-        
-        # Initialize AI modules
-        self.logger.info("Initializing AI modules...")
-        
-        try:
-            self.image_classifier = ImageClassifier()
-            self.logger.info("✓ Image classifier loaded")
-        except Exception as e:
-            self.logger.error(f"✗ Image classifier failed: {e}")
-            self.image_classifier = None
-        
-        try:
-            if self.face_detection_enabled:
-                self.face_detector = FaceDetector()
-                self.logger.info("✓ Face detector loaded")
-            else:
-                self.face_detector = None
-                self.logger.info("○ Face detection disabled")
-        except Exception as e:
-            self.logger.error(f"✗ Face detector failed: {e}")
-            self.face_detector = None
-        
-        try:
-            if self.ocr_enabled:
-                tesseract_path = self.config.get('OCR', 'tesseract_path')
-                self.ocr_engine = OCREngine(tesseract_path)
-                self.logger.info("✓ OCR engine loaded")
-            else:
-                self.ocr_engine = None
-                self.logger.info("○ OCR disabled")
-        except Exception as e:
-            self.logger.error(f"✗ OCR engine failed: {e}")
-            self.ocr_engine = None
-        
-        try:
-            if self.object_detection_enabled:
-                self.object_detector = ObjectDetector()
-                self.logger.info("✓ Object detector loaded")
-            else:
-                self.object_detector = None
-                self.logger.info("○ Object detection disabled")
-        except Exception as e:
-            self.logger.error(f"✗ Object detector failed: {e}")
-            self.object_detector = None
+        self.ai_service = ai_service
 
-        # Text analyzer for all text-based files
-        try:
-            self.text_analyzer = TextAnalyzer()
-            self.logger.info("✓ Text analyzer loaded")
-        except Exception as e:
-            self.logger.error(f"✗ Text analyzer failed: {e}")
-            self.text_analyzer = None
-
-        self.logger.info("AI modules initialization complete")
+        # Get pre-loaded models from the AI service
+        self.image_classifier = self.ai_service.image_classifier
+        self.face_detector = self.ai_service.face_detector
+        self.ocr_engine = self.ai_service.ocr_engine
+        self.object_detector = self.ai_service.object_detector
+        self.text_analyzer = self.ai_service.text_analyzer
+        
+        self.logger.info("AIAnalyzer initialized with shared AI models.")
     
     def analyze_file(self, file_id: int) -> Dict:
         """

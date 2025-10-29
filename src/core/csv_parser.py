@@ -15,7 +15,21 @@ from pathlib import Path
 from datetime import datetime
 from typing import Dict, List, Any, Optional, Callable
 import re
-from database.models import MessageType, CallType
+# from database.models import MessageType, CallType  # ORM not used - using repositories
+# Message and call type constants (replacing non-existent ORM enums)
+class MessageType:
+    TEXT = type('MessageType', (), {'value': 'text'})()
+    IMAGE = type('MessageType', (), {'value': 'image'})()
+    AUDIO = type('MessageType', (), {'value': 'audio'})()
+    VIDEO = type('MessageType', (), {'value': 'video'})()
+    OTHER = type('MessageType', (), {'value': 'other'})()
+
+class CallType:
+    VOICE_CALL = type('CallType', (), {'value': 'voice_call'})()
+    VIDEO_CALL = type('CallType', (), {'value': 'video_call'})()
+    INCOMING = type('CallType', (), {'value': 'incoming'})()
+    OUTGOING = type('CallType', (), {'value': 'outgoing'})()
+    MISSED = type('CallType', (), {'value': 'missed'})()
 
 
 class CSVParser:

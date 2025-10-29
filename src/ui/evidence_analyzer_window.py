@@ -7,6 +7,7 @@ from PyQt5.QtWidgets import (
     QProgressDialog, QApplication
 )
 from .workers.analysis_worker import AnalysisWorker
+from .workers.single_file_analysis_worker import SingleFileAnalysisWorker
 from PyQt5.QtCore import Qt, QThread, pyqtSignal
 from datetime import datetime
 from PyQt5.QtGui import QIcon
@@ -22,8 +23,8 @@ from .widgets.preview_widget import PreviewWidget
 
 from ..core.case_manager import CaseManager
 from ..core.file_scanner import FileScanner
+from ..core.ai_service import AIService
 from ..utils.logger import get_logger
-from ..ai.face_matcher import FaceMatcher
 
 class EvidenceAnalyzerWindow(QMainWindow):
     """Evidence Analyzer Module - Image/Video Analysis Window"""
@@ -31,17 +32,18 @@ class EvidenceAnalyzerWindow(QMainWindow):
     # Signal to notify when returning to dashboard
     return_to_dashboard_signal = pyqtSignal()
 
-    def __init__(self, device_type='computer'):
+    def __init__(self, device_type: str, ai_service: AIService):
         super().__init__()
 
         self.logger = get_logger()
+        self.ai_service = ai_service  # Store the AI service instance
         self.case_manager = CaseManager()
         self.file_scanner = FileScanner()
-        self.face_matcher = None  # Will be set when suspect photo is loaded
 
         self.current_case = None
         self.current_case_id = None
         self.device_type = device_type  # Store the device type
+        self.single_file_worker = None  # Track on-demand analysis worker
 
         # Map device types to display names (Police Seizure Categories)
         self.device_names = {
@@ -466,8 +468,8 @@ class EvidenceAnalyzerWindow(QMainWindow):
             self.progress_dialog.setMinimumDuration(0)
             self.progress_dialog.show()
             
-            # Create and start worker
-            self.analysis_worker = AnalysisWorker(self.current_case_id)
+            # Create and start worker, passing the AI service
+            self.analysis_worker = AnalysisWorker(self.current_case_id, self.ai_service)
             self.analysis_worker.progress.connect(self.on_analysis_progress)
             self.analysis_worker.finished.connect(self.on_analysis_finished)
             self.analysis_worker.error.connect(self.on_analysis_error)
@@ -743,8 +745,59 @@ class EvidenceAnalyzerWindow(QMainWindow):
             )
 
     def on_file_selected(self, file_data: dict):
-        """Handle file selection"""
-        self.preview_widget.load_file(file_data)
+        """Handle file selection with on-demand AI analysis"""
+        # Check if file needs AI analysis
+        if file_data.get('ai_processed') == 0:
+            # Show loading state in preview
+            self.preview_widget.show_loading_state(file_data)
+
+            # Start on-demand analysis
+            self.start_single_file_analysis(file_data)
+        else:
+            # File already analyzed - show cached results
+            self.preview_widget.load_file(file_data)
+
+    def start_single_file_analysis(self, file_data: dict):
+        """Start on-demand analysis for a single file"""
+        file_id = file_data['file_id']
+
+        # Create worker thread
+        self.single_file_worker = SingleFileAnalysisWorker(file_id, self.ai_service)
+
+        # Connect signals
+        self.single_file_worker.finished.connect(self.on_single_file_analysis_finished)
+        self.single_file_worker.error.connect(self.on_single_file_analysis_error)
+
+        # Start analysis
+        self.single_file_worker.start()
+        self.logger.info(f"Started on-demand analysis for file_id={file_id}")
+
+    def on_single_file_analysis_finished(self, updated_file_data: dict):
+        """Handle completion of single file analysis"""
+        # Update preview with AI results
+        self.preview_widget.load_file(updated_file_data)
+
+        # Refresh file list to show updated status (if method exists)
+        # self.file_list_widget.refresh_file(updated_file_data)
+
+        # Update status bar
+        self.status_bar.showMessage(f"Analysis complete: {updated_file_data['file_name']}")
+
+        self.logger.info(f"On-demand analysis complete for {updated_file_data['file_name']}")
+
+    def on_single_file_analysis_error(self, error_msg: str):
+        """Handle single file analysis error"""
+        self.logger.error(f"On-demand analysis error: {error_msg}")
+
+        # Show error in preview panel
+        self.preview_widget.show_error_state(error_msg)
+
+        # Show error dialog
+        QMessageBox.warning(
+            self,
+            "Analysis Error",
+            f"Failed to analyze file:\n\n{error_msg}"
+        )
 
     def return_to_dashboard(self):
         """Return to the device selection dashboard"""

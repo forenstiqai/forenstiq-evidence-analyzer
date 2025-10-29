@@ -246,16 +246,8 @@ class NewCaseDialog(QDialog):
             return False, "Investigator name is required."
 
         # Check if case number already exists
-        if self.db_manager:
-            from database.models import Case
-
-            with self.db_manager.get_session() as session:
-                existing_case = session.query(Case).filter_by(
-                    case_number=case_number
-                ).first()
-
-                if existing_case:
-                    return False, f"Case number '{case_number}' already exists.\nPlease use a different case number."
+        # Note: Duplicate check is handled by database UNIQUE constraint
+        # If needed, can be added via case_repository.get_case_by_number()
 
         return True, ""
 
@@ -282,34 +274,30 @@ class NewCaseDialog(QDialog):
             priority = self.priority_combo.currentText()
             description = self.description_input.toPlainText().strip()
 
-            # Create case in database
-            if self.db_manager:
-                from database.models import Case, CaseStatus
+            # Create case in database using CaseManager
+            from ...core.case_manager import CaseManager
 
-                with self.db_manager.get_session() as session:
-                    # Create case record
-                    case = Case(
-                        case_name=case_name,
-                        case_number=case_number,
-                        investigator_name=investigator,
-                        status=CaseStatus.NEW,
-                        description=description,
-                        notes=f"Agency: {agency}\nCase Type: {case_type}\nPriority: {priority}",
-                        device_info={
-                            'agency': agency,
-                            'case_type': case_type,
-                            'priority': priority
-                        }
-                    )
+            case_manager = CaseManager()
 
-                    session.add(case)
-                    session.commit()
+            # Prepare case data
+            case_data = {
+                'case_name': case_name,
+                'case_number': case_number,
+                'investigator_name': investigator,
+                'agency_name': agency,
+                'status': 'open',
+                'notes': f"Case Type: {case_type}\nPriority: {priority}\nDescription: {description}"
+            }
 
-                    # Store case data
-                    self.case_data = {
-                        'id': case.id,
-                        'case_name': case_name,
-                        'case_number': case_number,
+            # Create case
+            case_id = case_manager.create_case(case_data)
+
+            if case_id:
+                # Store case data
+                self.case_data = {
+                    'id': case_id,
+                    'case_name': case_name,
+                    'case_number': case_number,
                         'investigator_name': investigator,
                         'agency': agency,
                         'case_type': case_type,
@@ -343,11 +331,24 @@ class NewCaseDialog(QDialog):
                 )
 
         except Exception as e:
-            QMessageBox.critical(
-                self,
-                "Error Creating Case",
-                f"An error occurred while creating the case:\n\n{str(e)}"
-            )
+            error_msg = str(e)
+
+            # Check for duplicate case number
+            if "UNIQUE constraint failed: cases.case_number" in error_msg:
+                QMessageBox.warning(
+                    self,
+                    "Duplicate Case Number",
+                    f"A case with the number '{case_number}' already exists.\n\n"
+                    "Please use a different case number.\n\n"
+                    "Tip: Each case must have a unique case number for forensic integrity."
+                )
+            else:
+                QMessageBox.critical(
+                    self,
+                    "Error Creating Case",
+                    f"An error occurred while creating the case:\n\n{error_msg}"
+                )
+
             import traceback
             traceback.print_exc()
 

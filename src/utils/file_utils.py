@@ -321,3 +321,39 @@ def get_relative_path(file_path: Path, base_path: Path) -> Path:
         return file_path.relative_to(base_path)
     except ValueError:
         return file_path
+
+
+def cleanup_temp_directory():
+    """Clean up temporary extraction directory"""
+    import shutil
+    from .logger import get_logger
+
+    temp_dir = Path('temp')
+
+    if temp_dir.exists():
+        try:
+            shutil.rmtree(temp_dir)
+            temp_dir.mkdir(exist_ok=True)
+            logger = get_logger()
+            logger.info("Temp directory cleaned")
+            return True
+        except Exception as e:
+            logger = get_logger()
+            logger.error(f"Failed to clean temp directory: {e}")
+            return False
+    return True
+
+
+def get_temp_file_path(filename: str) -> Path:
+    """Get a temporary file path for extraction"""
+    from datetime import datetime
+
+    temp_dir = Path('temp')
+    temp_dir.mkdir(exist_ok=True)
+
+    # Create unique subdirectory using timestamp
+    timestamp = datetime.now().strftime('%Y%m%d_%H%M%S_%f')
+    extract_dir = temp_dir / timestamp
+    extract_dir.mkdir(exist_ok=True)
+
+    return extract_dir / filename

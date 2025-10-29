@@ -18,14 +18,16 @@ from src.ui.evidence_analyzer_window import EvidenceAnalyzerWindow
 from src.ui.mobile_forensics_window import MobileForensicsWindow
 from src.ui.styles import get_application_stylesheet
 from src.utils.logger import ForenstiqLogger
+from src.core.ai_service import AIService
 from src.utils.config_loader import get_config
 
 
 class ForenstiqApplication:
     """Main application controller"""
 
-    def __init__(self, app):
+    def __init__(self, app, ai_service: AIService):
         self.app = app
+        self.ai_service = ai_service  # Store the AI service
         self.splash = None
         self.dashboard = None
         self.active_module = None
@@ -64,8 +66,11 @@ class ForenstiqApplication:
         ]
 
         if device_type in valid_device_types:
-            # Launch Evidence Analyzer for this device type
-            self.active_module = EvidenceAnalyzerWindow(device_type=device_type)
+            # Launch Evidence Analyzer for this device type, passing the AI service
+            self.active_module = EvidenceAnalyzerWindow(
+                device_type=device_type,
+                ai_service=self.ai_service
+            )
             # Connect the return signal to show dashboard again
             self.active_module.return_to_dashboard_signal.connect(self.show_dashboard)
             self.active_module.show()
@@ -84,7 +89,7 @@ class ForenstiqApplication:
 
 def setup_application():
     """Setup application directories and configuration"""
-    
+
     # Create necessary directories
     directories = [
         'data',
@@ -93,14 +98,19 @@ def setup_application():
         'evidence_storage',
         'temp'
     ]
-    
+
     for dir_name in directories:
         Path(dir_name).mkdir(exist_ok=True)
-    
+
+    # Clean up temp directory from previous session
+    from src.utils.file_utils import cleanup_temp_directory
+    cleanup_temp_directory()
+
     # Initialize logging
     logger = ForenstiqLogger.get_logger()
     logger.info("=" * 60)
     logger.info("Forenstiq Evidence Analyzer Starting")
+    logger.info("Temp directory cleaned")
     logger.info("=" * 60)
     
     # Load configuration
@@ -136,8 +146,15 @@ def main():
     # Apply modern stylesheet
     app.setStyleSheet(get_application_stylesheet())
 
-    # Create and start application with new flow
-    forenstiq_app = ForenstiqApplication(app)
+    # Initialize the AI Service Singleton at startup
+    # This will load all AI models once
+    logger = ForenstiqLogger.get_logger()
+    logger.info("Pre-loading AI models...")
+    ai_service = AIService()
+    logger.info("AI models loaded and ready.")
+
+    # Create and start application with the AI service
+    forenstiq_app = ForenstiqApplication(app, ai_service)
     forenstiq_app.start()
 
     # Start event loop

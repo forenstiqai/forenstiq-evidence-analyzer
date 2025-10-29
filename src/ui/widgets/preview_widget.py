@@ -235,3 +235,54 @@ class PreviewWidget(QWidget):
         self.metadata_text.clear()
         self.flag_button.setEnabled(False)
         self.note_button.setEnabled(False)
+
+    def show_loading_state(self, file_data: dict):
+        """Show loading state while AI analysis is running"""
+        self.current_file = file_data
+
+        # Display image if available
+        if file_data.get('file_type') == 'image':
+            file_path = Path(file_data.get('file_path'))
+            if file_path.exists():
+                try:
+                    pil_image = load_image_pil(file_path)
+                    if pil_image:
+                        display_size = (600, 600)
+                        pil_image.thumbnail(display_size)
+                        pixmap = pil_to_pixmap(pil_image)
+                        self.image_label.setPixmap(pixmap)
+                        self.image_label.setAlignment(Qt.AlignCenter)
+                except:
+                    self.image_label.setText("Image preview unavailable")
+            else:
+                self.image_label.setText("Image file not found")
+        else:
+            self.image_label.setText(f"Preview not available for {file_data.get('file_type')} files")
+
+        # Show loading message in metadata
+        loading_text = f"Filename: {file_data.get('file_name', 'N/A')}\n\n"
+        loading_text += "=== AI ANALYSIS IN PROGRESS ===\n\n"
+        loading_text += "🔄 Analyzing with AI...\n\n"
+        loading_text += "• Detecting faces\n"
+        loading_text += "• Identifying objects\n"
+        loading_text += "• Extracting text (OCR)\n"
+        loading_text += "• Classifying image\n\n"
+        loading_text += "This may take 5-10 seconds...\n"
+
+        self.metadata_text.setPlainText(loading_text)
+
+        # Disable buttons during analysis
+        self.flag_button.setEnabled(False)
+        self.note_button.setEnabled(False)
+
+    def show_error_state(self, error_msg: str):
+        """Show error state when analysis fails"""
+        error_text = "=== ANALYSIS ERROR ===\n\n"
+        error_text += f"❌ {error_msg}\n\n"
+        error_text += "The file could not be analyzed. Please check:\n"
+        error_text += "• File is not corrupted\n"
+        error_text += "• AI models are loaded correctly\n"
+        error_text += "• Sufficient disk space available\n\n"
+        error_text += "Check logs for more details."
+
+        self.metadata_text.setPlainText(error_text)

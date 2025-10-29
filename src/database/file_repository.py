@@ -170,9 +170,22 @@ class FileRepository:
     def get_unprocessed_files(self, case_id: int) -> List[Dict]:
         """Get files that haven't been processed by AI yet"""
         query = '''
-            SELECT * FROM evidence_files 
+            SELECT * FROM evidence_files
             WHERE case_id = ? AND ai_processed = 0
             ORDER BY imported_date ASC
         '''
         results = self.db.execute_query(query, (case_id,))
         return [dict(row) for row in results]
+
+    def get_unprocessed_count(self, case_id: int) -> int:
+        """Get count of files that haven't been processed by AI yet"""
+        query = '''
+            SELECT COUNT(*)
+            FROM evidence_files
+            WHERE case_id = ? AND ai_processed = 0
+        '''
+        results = self.db.execute_query(query, (case_id,))
+
+        if results:
+            return results[0][0]
+        return 0

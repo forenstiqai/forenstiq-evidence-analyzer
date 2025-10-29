@@ -4,6 +4,8 @@ Background worker for AI analysis
 from PyQt5.QtCore import QThread, pyqtSignal
 from ...core.ai_analyzer import AIAnalyzer
 
+from ...core.ai_service import AIService
+
 class AnalysisWorker(QThread):
     """Worker thread for AI analysis"""
     
@@ -11,17 +13,18 @@ class AnalysisWorker(QThread):
     finished = pyqtSignal(dict)  # stats
     error = pyqtSignal(str)  # error message
     
-    def __init__(self, case_id):
+    def __init__(self, case_id: int, ai_service: AIService):
         super().__init__()
         self.case_id = case_id
+        self.ai_service = ai_service
         self.analyzer = None
         self._is_cancelled = False
     
     def run(self):
         """Run analysis in background"""
         try:
-            # Initialize analyzer here (in worker thread)
-            self.analyzer = AIAnalyzer()
+            # Initialize analyzer here (in worker thread) with the shared AI service
+            self.analyzer = AIAnalyzer(self.ai_service)
             
             stats = self.analyzer.analyze_case(
                 self.case_id,
