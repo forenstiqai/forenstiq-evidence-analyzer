@@ -2,7 +2,13 @@
 Face Matching and Recognition Module
 Compare a suspect's face against evidence photos
 """
-import face_recognition
+try:
+    import face_recognition
+    FACE_RECOGNITION_AVAILABLE = True
+except ImportError:
+    FACE_RECOGNITION_AVAILABLE = False
+    print("Warning: face_recognition library not available. Face matching features disabled.")
+
 import numpy as np
 from pathlib import Path
 from typing import List, Dict, Tuple, Optional
@@ -34,6 +40,13 @@ class FaceMatcher:
         Returns:
             Dictionary with status and face count
         """
+        if not FACE_RECOGNITION_AVAILABLE:
+            return {
+                'success': False,
+                'error': 'Face recognition library not available',
+                'face_count': 0
+            }
+
         try:
             # Load image
             image = face_recognition.load_image_file(str(image_path))
@@ -76,6 +89,14 @@ class FaceMatcher:
         Returns:
             Dictionary with match results
         """
+        if not FACE_RECOGNITION_AVAILABLE:
+            return {
+                'has_match': False,
+                'error': 'Face recognition library not available',
+                'match_count': 0,
+                'confidence': 0.0
+            }
+
         if not self.suspect_encodings:
             return {
                 'has_match': False,

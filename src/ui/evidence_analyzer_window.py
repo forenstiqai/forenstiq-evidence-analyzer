@@ -31,7 +31,7 @@ class EvidenceAnalyzerWindow(QMainWindow):
     # Signal to notify when returning to dashboard
     return_to_dashboard_signal = pyqtSignal()
 
-    def __init__(self, device_type='laptop'):
+    def __init__(self, device_type='computer'):
         super().__init__()
 
         self.logger = get_logger()
@@ -43,14 +43,14 @@ class EvidenceAnalyzerWindow(QMainWindow):
         self.current_case_id = None
         self.device_type = device_type  # Store the device type
 
-        # Map device types to display names
+        # Map device types to display names (Police Seizure Categories)
         self.device_names = {
-            'mobile': '📱 Phone Tool',
-            'laptop': '💻 Computer Tool',
-            'cctv': '📹 CCTV Tool',
-            'cloud': '☁️ Cloud Tool',
-            'network': '🌐 Network Tool',
-            'iot': '🔌 IoT Tool'
+            'mobile': '📱 Mobile Devices',
+            'storage': '💾 Storage Media',
+            'computer': '💻 Computers',
+            'cctv': '📹 CCTV/DVR Systems',
+            'network': '🌐 Network Equipment',
+            'fraud_device': '⚠️ Fraud Equipment'
         }
 
         self.init_ui()

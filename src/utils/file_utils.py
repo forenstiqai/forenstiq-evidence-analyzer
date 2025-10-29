@@ -122,12 +122,130 @@ def is_system_file(file_path: Path) -> bool:
 
 def get_file_category(file_path: Path) -> str:
     """
-    Determine the category of a file
+    Determine the forensic category of a file
+    Enhanced detection for 27 evidence types based on 2024-2025 police seizure patterns
 
     Returns:
-        Category string: 'image', 'video', 'document', 'audio', 'archive',
-        'database', 'code', 'executable', 'email', 'system', 'other'
+        Category string: 'messaging', 'messages', 'calls', 'social_media',
+        'banking', 'cryptocurrency', 'image', 'video', 'cctv', 'document',
+        'contacts', 'location', 'browser', 'cloud', 'database', 'archive',
+        'memory', 'network', 'sim_data', 'fraud_device', 'iot', 'encrypted',
+        'audio', 'email', 'executable', 'system', 'other'
     """
+    filename = file_path.name.lower()
+    parent_folder = file_path.parent.name.lower()
+
+    # Priority 1: Communication Evidence - Messaging Apps (WhatsApp, Telegram, Signal)
+    if (filename in ['msgstore.db', 'wa.db', 'msgstore.db.crypt14', 'msgstore.db.crypt15'] or
+        'whatsapp' in filename or 'whatsapp' in parent_folder or
+        'telegram' in filename or 'telegram' in parent_folder or
+        'signal' in filename or 'signal' in parent_folder or
+        'viber' in filename or 'wechat' in filename):
+        return 'messaging'
+
+    # Priority 1: SMS/Messages (text messages, MMS)
+    if (filename in ['mmssms.db', 'sms.db', 'messages.db'] or
+        'sms' in filename or 'mms' in filename or 'messages' in parent_folder):
+        return 'messages'
+
+    # Priority 1: Call Logs (CDR - Call Detail Records)
+    if (filename in ['calls.db', 'call_log.db', 'calllog.db'] or
+        'call' in filename and '.db' in filename or
+        'cdr' in filename or filename.endswith('.cdr')):
+        return 'calls'
+
+    # Priority 1: Social Media (Facebook, Instagram, Twitter, Snapchat)
+    if ('facebook' in filename or 'facebook' in parent_folder or
+        'instagram' in filename or 'instagram' in parent_folder or
+        'twitter' in filename or 'twitter' in parent_folder or
+        'snapchat' in filename or 'snapchat' in parent_folder or
+        'tiktok' in filename or 'linkedin' in filename or
+        'social' in parent_folder):
+        return 'social_media'
+
+    # Priority 2: Banking/UPI Data (traditional finance)
+    if ('upi' in filename or 'banking' in filename or 'bank' in filename or
+        'paytm' in filename or 'phonepe' in filename or 'googlepay' in filename or
+        'bhim' in filename or 'transaction' in filename or
+        parent_folder in ['banking', 'upi', 'payments']):
+        return 'banking'
+
+    # Priority 2: Cryptocurrency (Bitcoin, Ethereum, wallets, blockchain)
+    if ('wallet' in filename and file_path.suffix.lower() in ['.dat', '.wallet', '.json'] or
+        'bitcoin' in filename or 'ethereum' in filename or 'crypto' in filename or
+        'blockchain' in filename or parent_folder in ['crypto', 'cryptocurrency', 'wallets']):
+        return 'cryptocurrency'
+
+    # Priority 3: CCTV/Surveillance (DVR exports, separate from personal videos)
+    if ('cctv' in filename or 'cctv' in parent_folder or
+        'dvr' in filename or 'dvr' in parent_folder or
+        'surveillance' in filename or 'surveillance' in parent_folder or
+        'nvr' in filename or parent_folder in ['cctv', 'dvr', 'surveillance', 'cameras']):
+        return 'cctv'
+
+    # Priority 5: Contacts (phone book, address book)
+    if (filename in ['contacts.db', 'contacts2.db', 'phonebook.db'] or
+        'contact' in filename and '.db' in filename or
+        parent_folder == 'contacts'):
+        return 'contacts'
+
+    # Priority 5: Location/GPS Data (movement tracking, geolocation)
+    if (filename.endswith('.gpx') or filename.endswith('.kml') or
+        filename.endswith('.kmz') or 'gps' in filename or
+        'location' in filename or 'geolocation' in filename or
+        parent_folder in ['gps', 'location', 'tracks']):
+        return 'location'
+
+    # Priority 6: Browser Data (history, cookies, cache, passwords)
+    if (filename in ['history', 'cookies', 'cache', 'login data', 'preferences'] or
+        'browser' in parent_folder or parent_folder in ['chrome', 'firefox', 'safari', 'edge'] or
+        'history' in filename and '.db' in filename):
+        return 'browser'
+
+    # Priority 6: Cloud Storage (Google Drive, Dropbox, iCloud exports)
+    if ('googledrive' in filename or 'google drive' in parent_folder or
+        'dropbox' in filename or 'dropbox' in parent_folder or
+        'icloud' in filename or 'icloud' in parent_folder or
+        'onedrive' in filename or 'onedrive' in parent_folder or
+        parent_folder in ['cloud', 'google drive', 'dropbox', 'icloud', 'onedrive']):
+        return 'cloud'
+
+    # Priority 7: Memory/Volatile Data (RAM dumps, live forensics)
+    if (file_path.suffix.lower() in ['.raw', '.mem', '.dmp', '.vmem'] or
+        'memory' in filename or 'memdump' in filename or 'ram' in filename or
+        parent_folder in ['memory', 'dumps', 'ramdump']):
+        return 'memory'
+
+    # Priority 8: Network Logs (router logs, connection logs)
+    if (('router' in filename or 'network' in filename or 'dns' in filename) or
+        parent_folder in ['router', 'network', 'logs', 'pcap'] or
+        file_path.suffix.lower() in ['.pcap', '.pcapng']):
+        return 'network'
+
+    # Priority 8: SIM Card Data (SIM dumps, ICCID, IMSI)
+    if ('sim' in filename and '.bin' in filename or
+        'iccid' in filename or 'imsi' in filename or
+        parent_folder == 'sim'):
+        return 'sim_data'
+
+    # Priority 8: Fraud Device Data (SIM box, GSM gateway, skimmers)
+    if ('simbox' in filename or 'gsm' in filename or 'skimmer' in filename or
+        parent_folder in ['simbox', 'gsm_gateway', 'fraud']):
+        return 'fraud_device'
+
+    # Priority 10: Smart Devices/IoT (smartwatch, fitness tracker, vehicle data)
+    if (file_path.suffix.lower() in ['.fit', '.tcx'] or
+        'garmin' in filename or 'fitbit' in filename or 'smartwatch' in filename or
+        'vehicle' in filename or 'infotainment' in filename or
+        parent_folder in ['smartwatch', 'fitness', 'vehicle', 'iot', 'wearables']):
+        return 'iot'
+
+    # Priority 10: Encrypted/Protected Files (encrypted containers, password-protected)
+    if (file_path.suffix.lower() in ['.encrypted', '.enc', '.tc', '.hc'] or
+        'encrypted' in filename or 'truecrypt' in filename or 'veracrypt' in filename):
+        return 'encrypted'
+
+    # Extension-based detection for standard categories
     if is_image_file(file_path):
         return 'image'
     elif is_video_file(file_path):

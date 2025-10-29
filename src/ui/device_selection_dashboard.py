@@ -130,7 +130,7 @@ class DeviceSelectionDashboard(QMainWindow):
         main_layout.addSpacing(20)
 
         # Subtitle
-        subtitle_label = QLabel("Select Device Type to Begin Analysis")
+        subtitle_label = QLabel("Select Evidence Type (Police Seizure Categories)")
         subtitle_label.setAlignment(Qt.AlignCenter)
         subtitle_font = QFont("Arial", 16, QFont.Bold)
         subtitle_label.setFont(subtitle_font)
@@ -144,43 +144,43 @@ class DeviceSelectionDashboard(QMainWindow):
         cards_layout = QGridLayout()
         cards_layout.setSpacing(25)
 
-        # Create device cards
+        # Create evidence category cards (based on actual police seizures)
         devices = [
             {
                 'type': 'mobile',
                 'icon': '📱',
-                'title': 'Mobile Phone',
-                'description': 'Extract and analyze data from smartphones including photos, videos, messages, and call logs'
+                'title': 'Mobile Devices',
+                'description': 'Smartphones, feature phones, tablets - WhatsApp, SMS, calls, photos, UPI transactions'
             },
             {
-                'type': 'laptop',
+                'type': 'storage',
+                'icon': '💾',
+                'title': 'Storage Media',
+                'description': 'USB drives, memory cards, external HDDs, SIM cards - bulk data extraction'
+            },
+            {
+                'type': 'computer',
                 'icon': '💻',
-                'title': 'Laptop/Computer',
-                'description': 'Forensic analysis of computer systems, hard drives, and digital evidence files'
+                'title': 'Computers',
+                'description': 'Laptops, desktops, internal drives - documents, browser history, financial records'
             },
             {
                 'type': 'cctv',
                 'icon': '📹',
-                'title': 'CCTV Camera',
-                'description': 'Analyze surveillance footage, extract frames, and detect objects and faces'
-            },
-            {
-                'type': 'cloud',
-                'icon': '☁️',
-                'title': 'Cloud Storage',
-                'description': 'Extract evidence from cloud storage platforms and online accounts'
+                'title': 'CCTV/DVR Systems',
+                'description': 'Surveillance footage, DVR exports - face detection, movement tracking, timeline analysis'
             },
             {
                 'type': 'network',
                 'icon': '🌐',
-                'title': 'Network Traffic',
-                'description': 'Analyze network logs, packet captures, and internet activity'
+                'title': 'Network Equipment',
+                'description': 'Routers, modems - connection logs, DNS history, device tracking'
             },
             {
-                'type': 'iot',
-                'icon': '🔌',
-                'title': 'IoT Devices',
-                'description': 'Extract data from smart home devices, wearables, and connected gadgets'
+                'type': 'fraud_device',
+                'icon': '⚠️',
+                'title': 'Fraud Equipment',
+                'description': 'SIM boxes, GSM gateways, skimmers - specialized cybercrime device analysis'
             }
         ]
 

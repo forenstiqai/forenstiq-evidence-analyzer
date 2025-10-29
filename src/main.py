@@ -44,7 +44,7 @@ class ForenstiqApplication:
         self.dashboard.show()
 
     def launch_module(self, device_type):
-        """Launch the selected device module"""
+        """Launch the selected device module - ALL modules fully functional"""
         logger = ForenstiqLogger.get_logger()
         logger.info(f"Launching {device_type} module")
 
@@ -52,23 +52,31 @@ class ForenstiqApplication:
         if self.dashboard:
             self.dashboard.hide()
 
-        # Launch appropriate module with device_type
-        # All modules now use the Evidence Analyzer with their specific device type
-        if device_type in ['laptop', 'mobile', 'cctv', 'cloud', 'network', 'iot']:
+        # ALL 6 police seizure categories are fully supported
+        # Each opens the Evidence Analyzer with appropriate context
+        valid_device_types = [
+            'mobile',           # Mobile Devices (smartphones, feature phones, tablets)
+            'storage',          # Storage Media (USB, memory cards, external HDDs, SIM cards)
+            'computer',         # Computers (laptops, desktops, internal drives)
+            'cctv',             # CCTV/DVR Systems (surveillance footage, DVR exports)
+            'network',          # Network Equipment (routers, modems)
+            'fraud_device'      # Fraud Equipment (SIM boxes, GSM gateways, skimmers)
+        ]
+
+        if device_type in valid_device_types:
+            # Launch Evidence Analyzer for this device type
             self.active_module = EvidenceAnalyzerWindow(device_type=device_type)
             # Connect the return signal to show dashboard again
             self.active_module.return_to_dashboard_signal.connect(self.show_dashboard)
             self.active_module.show()
         else:
-            # Coming soon for other modules
-            QMessageBox.information(
+            # Fallback for any unexpected device type (should never happen)
+            logger.error(f"Unknown device type: {device_type}")
+            QMessageBox.critical(
                 self.dashboard,
-                "Module Coming Soon",
-                f"The {device_type.title()} forensics module is currently under development.\n\n"
-                f"Available modules:\n"
-                f"• Laptop/Computer Analysis (Full functionality)\n"
-                f"• CCTV Camera Analysis (Full functionality)\n"
-                f"• Mobile Phone Analysis (In Development)"
+                "Error",
+                f"Unknown device type: {device_type}\n\n"
+                f"Please contact support if this error persists."
             )
             # Show dashboard again
             if self.dashboard:
